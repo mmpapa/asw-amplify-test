@@ -1,9 +1,11 @@
 import React, {useState, useEffect} from "react"
 import './App.css';
 import {Amplify, API, Storage} from "aws-amplify";
-import {withAuthenticator} from "@aws-amplify/ui-react";
+import {withAuthenticator, Text, Heading, Divider, Image, Button, TextField, Flex, Card } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import awsExports from "./aws-exports";
+
+import { FaBeer, FaBell } from 'react-icons/fa';
 
 import {listNotes} from "./graphql/queries";
 import {createNote as createNoteMutation,deleteNote as deleteNoteMutation} from "./graphql/mutations";
@@ -16,9 +18,11 @@ function App({signOut, user}) {
 
   const [notes, setNotes] = useState([]);
   const [formData, setFormData] = useState(initialFormState);
+  const [isLoad, setIsLoad] = useState(true);
 
   useEffect(() => {
     fetchNotes();
+    setIsLoad(false);
   });
   async function fetchNotes() {
     const apiData = await API.graphql({ query: listNotes });
@@ -58,33 +62,60 @@ function App({signOut, user}) {
   }
 
   return (
-    <div className="App">
-      <h1>My Notes App {user.email}</h1>
-      <input
+    <div className="App" style={{"padding": "2rem"}}>
+      <Heading level={2}>My Notes App</Heading>
+      <Heading level={6} color="green" fontWeight="bold">{user.attributes.email} &nbsp; <FaBeer />  &nbsp; <FaBell /></Heading>
+      <br />
+      <Divider  label="の" />
+      <br/>
+      <Flex direction="row" gap="1rem" 
+      //justifyContent="flex-start" 
+      style={{"margin": "10px", "text-align": "left"}}>
+      <TextField
+        //type="text"
+        width="20rem"
+        //direction="column"
+        //inputMode="text"      
+        label="ノート名"
+        isRequired={true}
+        //hasError={true}
+        //descriptiveText="ノート名"
         onChange={e => setFormData({ ...formData, 'name': e.target.value})}
-        placeholder="Note name"
+        placeholder="ノート名を入力してください。"
         value={formData.name}
       />
-      <input
+      <TextField
+        label="説明"
+        width="40rem"
+        justifyContent="flex-start"
         onChange={e => setFormData({ ...formData, 'description': e.target.value})}
-        placeholder="Note description"
+        placeholder="説明を入力してください"
         value={formData.description}
       />
-      <input type="file" onChange={onChangeFile} />
-
-      <button onClick={createNote}>Create Note</button>
+      <input type="file" onChange={onChangeFile} style={{"margin-top": "2.3rem"}}/>
+      </Flex>
+      <br/>
+      <Button isLoading={isLoad}
+       loadingText="まーだだよ"
+       onClick={createNote}
+       style={{"text-align": "right"}}>
+        登録
+      </Button>
+      <br/>
+      <br/>
+      <Divider  label="リスト" />
       <div style={{marginBottom: 30}}>
         {
           notes.map(note => (
-            <div key={note.id || note.name}>
-              <h2>{note.name}</h2>
-              <p>{note.description}</p>
-              {
-                note.image && <img src={note.image} style={{width: 400}} />
-              }
-              <br/>
-              <button onClick={() => deleteNote(note)}>Delete note</button>
-            </div>
+            <Card key={note.id || note.name} padding="1rem" variation="elevated">
+                <Heading level={5}>{note.name}</Heading>
+                <Text>{note.description}</Text>
+                {
+                  note.image && <Image src={note.image} width="400px" onClick={() => alert('📸 Say cheese!')} />
+                }
+                <br/>
+                <Button onClick={() => deleteNote(note)}>これ削除</Button>
+            </Card>
           ))
         }
       </div>
